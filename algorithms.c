@@ -13,16 +13,16 @@ enum {
 };
 
 // function declarations
-void compress(FILE *inputFile, FILE *outputFile);
+void compress(char inputFile[], int *outputFile);
 void decompress(FILE *inputFile, FILE *outputFile);
 int decode(int code, FILE * outputFile);
 
 // compression
-void compress(FILE *inputFile, FILE *outputFile) {    
-    int prefix = getc(inputFile);
-    if (prefix == EOF) {
+void compress(char inputFile[], int *outputFile) {    
+    int prefix = inputFile[0];
+    /*if (prefix == EOF) {
         return;
-    }
+    }*/
     int character;
 
     int nextCode;
@@ -33,14 +33,19 @@ void compress(FILE *inputFile, FILE *outputFile) {
     nextCode = 256; // next code is the next available string code
     dictionaryInit();
     
+    int i=0;
+    int j=1;
+    
     // while (there is still data to be read)
-    while ((character = getc(inputFile)) != (unsigned)EOF) { // ch = read a character;
+    while (j <= strlen(inputFile)) { // ch = read a character;
+    	
+    	character = inputFile[j++];
         
         // if (dictionary contains prefix+character)
         if ((index = dictionaryLookup(prefix, character)) != -1) prefix = index; // prefix = prefix+character
         else { // ...no, try to add it
             // encode s to output file
-            writeBinary(outputFile, prefix);
+            i=makeArray(outputFile,i,prefix);
             
             // add prefix+character to dictionary
             if (nextCode < dictionarySize) dictionaryAdd(prefix, character, nextCode++);
@@ -50,9 +55,12 @@ void compress(FILE *inputFile, FILE *outputFile) {
         }
     }
     // encode s to output file
-    writeBinary(outputFile, prefix); // output the last code
+    i=makeArray(outputFile,i, prefix); // output the last code
     
-    if (leftover > 0) fputc(leftoverBits << 4, outputFile);
+    if (leftover > 0){
+     //fputc(leftoverBits << 4, outputFile);
+     outputFile[i] = leftoverBits << 4;
+     }
     
     // free the dictionary here
     dictionaryDestroy();
